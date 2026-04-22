@@ -1,0 +1,29 @@
+{
+  "name": "llm-arena",
+  "version": "1.0.0",
+  "main": "dist/index.js",
+  "type": "commonjs",
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "dev": "tsx watch src/index.ts",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "devDependencies": {
+    "@types/node": "^25.6.0",
+    "tsx": "^4.21.0",
+    "typescript": "^6.0.3"
+  },
+  "dependencies": {
+    "@langchain/cohere": "^1.0.4",
+    "@langchain/core": "^1.1.40",
+    "@langchain/google": "^0.1.10",
+    "@langchain/langgraph": "^1.2.9",
+    "@langchain/mistralai": "^1.0.7",
+    "dotenv": "^17.4.2"
+  }
+}
