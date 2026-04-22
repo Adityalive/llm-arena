@@ -8,7 +8,7 @@ import {
 } from "@langchain/langgraph";
 import z from "zod";
 import { models } from "./model.ai";
-import { createAgent, HumanMessage, providerStrategy } from "langchain";
+import { createAgent, HumanMessage, toolStrategy } from "langchain";
 
 const State = new StateSchema({
   problem: z.string().default(""),
@@ -48,8 +48,8 @@ const judgeNode: GraphNode<typeof State> = async (state) => {
   const { problem, solution_1, solution_2 } = state;
 
   const judge = createAgent({
-    model: models.google!,
-    responseFormat: providerStrategy(
+    model: models.mistral!,
+    responseFormat: toolStrategy(
       z.object({
         solution_1_score: z.number().min(0).max(10),
         solution_2_score: z.number().min(0).max(10),
@@ -101,6 +101,9 @@ const graph = new StateGraph(State)
   .compile();
 
 export default async function (problem: string) { 
+    if (!problem?.trim()) {
+        throw new Error("problem is required and must be a non-empty string");
+    }
 
     const result = await graph.invoke({
         problem: problem
