@@ -1,6 +1,7 @@
 import mongoose from "mongoose";
 import { randomUUID } from "node:crypto";
 import type { Request, Response } from "express";
+import { HumanMessage } from "@langchain/core/messages";
 import Chat from "../models/chat.model";
 import Message from "../models/Message.model";
 import { getModel, type ModelProvider } from "../services/model.ai";
@@ -89,6 +90,43 @@ function emitToChat(io: AppIo | undefined, chatId: string, event: string, payloa
   }
 
   io.to(`chat:${chatId}`).emit(event, payload);
+}
+
+export async function getChats(_req: Request, res: Response) {
+  try {
+    const chats = await Message.aggregate([
+      {
+        $match: {
+          role: "user",
+          content: { $type: "string", $ne: "" },
+        },
+      },
+      { $sort: { createdAt: 1 } },
+      {
+        $group: {
+          _id: "$chatId",
+          title: { $first: "$content" },
+          createdAt: { $first: "$createdAt" },
+          updatedAt: { $last: "$updatedAt" },
+        },
+      },
+      { $sort: { updatedAt: -1 } },
+      { $limit: 50 },
+    ]);
+
+    res.status(200).json({
+      message: "Chats fetched successfully",
+      data: chats.map((chat) => ({
+        chatId: chat._id,
+        title: chat.title,
+        createdAt: chat.createdAt,
+        updatedAt: chat.updatedAt,
+      })),
+    });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Unknown error";
+    res.status(500).json({ message: "Error fetching chats", error: message });
+  }
 }
 
 export async function createChat(req: Request, res: Response) {
@@ -232,13 +270,15 @@ export async function sendMessage(req: Request, res: Response) {
         const model = getModel(selectedProvider);
         let finalContent = "";
 
+        const messages = [new HumanMessage(prompt)];
+
         const maybeStreamModel = model as unknown as {
-          stream?: (input: string) => AsyncIterable<unknown> | Promise<AsyncIterable<unknown>>;
-          invoke: (input: string) => Promise<unknown>;
+          stream?: (input: HumanMessage[]) => AsyncIterable<unknown> | Promise<AsyncIterable<unknown>>;
+          invoke: (input: HumanMessage[]) => Promise<unknown>;
         };
 
         if (typeof maybeStreamModel.stream === "function") {
-          const stream = await maybeStreamModel.stream(prompt);
+          const stream = await maybeStreamModel.stream(messages);
           for await (const chunk of stream) {
             const token = extractText(chunk);
             if (!token) {
@@ -254,7 +294,7 @@ export async function sendMessage(req: Request, res: Response) {
             });
           }
         } else {
-          const response = await maybeStreamModel.invoke(prompt);
+          const response = await maybeStreamModel.invoke(messages);
           finalContent = extractText(response);
 
           if (finalContent) {

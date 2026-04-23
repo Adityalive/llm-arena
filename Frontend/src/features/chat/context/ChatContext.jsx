@@ -40,6 +40,13 @@ export function ChatProvider({ children }) {
     return response?.data?.messages ?? [];
   }, [chatId]);
 
+  const openChat = useCallback(async (nextChatId) => {
+    const response = await getChatHistory(nextChatId);
+    setChatId(nextChatId);
+    setChatError("");
+    return response?.data?.messages ?? [];
+  }, []);
+
   const resetChat = useCallback(() => {
     setChatId(null);
     setChatError("");
@@ -53,9 +60,10 @@ export function ChatProvider({ children }) {
       ensureChat,
       sendMessage,
       fetchHistory,
+      openChat,
       resetChat,
     }),
-    [chatId, chatError, ensureChat, sendMessage, fetchHistory, resetChat]
+    [chatId, chatError, ensureChat, sendMessage, fetchHistory, openChat, resetChat]
   );
 
   return <ChatContext.Provider value={value}>{children}</ChatContext.Provider>;

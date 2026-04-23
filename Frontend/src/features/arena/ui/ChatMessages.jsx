@@ -19,22 +19,30 @@ function UserMessage({ message }) {
 }
 
 function AssistantMessage({ message, onGuide }) {
+  const hasSolutions = Array.isArray(message.solutions) && message.solutions.length > 0;
+
   return (
     <div className="message-row assistant fade-in">
       <div className="assistant-avatar">
         <IconSparkleLogo />
       </div>
       <div className="assistant-content">
-        <p className="assistant-intro">{message.intro}</p>
-        <div className="solutions-stack">
-          {message.solutions.map((solution) => (
-            <SolutionCard key={solution.id} solution={solution} onGuide={onGuide} />
-          ))}
-        </div>
-        <div className="assistant-footer">
-          <WinnerBadge winner={message.winner} />
-          <p className="assistant-note">Let me know if you want code-level implementation for the winner.</p>
-        </div>
+        {hasSolutions ? (
+          <>
+            <p className="assistant-intro">{message.intro}</p>
+            <div className="solutions-stack">
+              {message.solutions.map((solution) => (
+                <SolutionCard key={solution.id} solution={solution} onGuide={onGuide} />
+              ))}
+            </div>
+            <div className="assistant-footer">
+              <WinnerBadge winner={message.winner} />
+              <p className="assistant-note">Let me know if you want code-level implementation for the winner.</p>
+            </div>
+          </>
+        ) : (
+          <div className="message-bubble assistant">{message.content}</div>
+        )}
       </div>
     </div>
   );

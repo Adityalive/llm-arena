@@ -1,4 +1,5 @@
 import { END, StateGraph } from "@langchain/langgraph";
+import { HumanMessage } from "@langchain/core/messages";
 import z from "zod";
 import { getConfiguredModel, getModel } from "./model.ai";
 
@@ -93,8 +94,8 @@ const solutionNode = async (state: GraphState): Promise<Partial<GraphState>> => 
   }
 
   const [mistralResponse, cohereResponse] = await Promise.all([
-    mistralModel.invoke(state.problem),
-    cohereModel.invoke(state.problem),
+    mistralModel.invoke([new HumanMessage(state.problem)]),
+    cohereModel.invoke([new HumanMessage(state.problem)]),
   ]);
 
   return {
@@ -114,7 +115,7 @@ const evaluateNode = async (state: GraphState): Promise<Partial<GraphState>> => 
   ].join("\n");
 
   const judgeModel = getModel("mistral");
-  const judgeResponse = await judgeModel.invoke(prompt);
+  const judgeResponse = await judgeModel.invoke([new HumanMessage(prompt)]);
   const rawText = extractText(judgeResponse);
 
   let parsed = defaultJudgeResult;

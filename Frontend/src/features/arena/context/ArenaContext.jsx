@@ -1,15 +1,19 @@
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { evaluateProblem } from "../api/arenaApi";
 import { formatHistoryTimestamp, toBulletPoints, truncateText } from "../../../shared/utils/formatters";
+import { getChats } from "../../chat/api/chatApi";
 import { useChat } from "../../chat/hooks/useChat";
 
-const INITIAL_HISTORY = [
-  { id: "seed-1", title: "Problem: How to optimize API latency", timestamp: "Today" },
-  { id: "seed-2", title: "Problem: Improve database throughput", timestamp: "Yesterday" },
-  { id: "seed-3", title: "Problem: AI support response quality", timestamp: "2 days ago" },
-];
-
 import { ArenaContext } from "./ArenaContextValue";
+
+function mapStoredMessage(message) {
+  return {
+    id: message._id ?? `${message.role}-${message.createdAt ?? Date.now()}`,
+    role: message.role,
+    content: message.content ?? "",
+    createdAt: message.createdAt,
+  };
+}
 
 function buildSolution(title, text, accent, score, isWinner) {
   return {
@@ -58,14 +62,60 @@ function buildAssistantMessage(problem, response) {
 }
 
 export function ArenaProvider({ children }) {
-  const { sendMessage, resetChat, setChatError } = useChat();
+  const { sendMessage, openChat, resetChat, setChatError } = useChat();
 
   const [messages, setMessages] = useState([]);
-  const [historyItems, setHistoryItems] = useState(INITIAL_HISTORY);
+  const [historyItems, setHistoryItems] = useState([]);
   const [draft, setDraft] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState("");
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+
+  useEffect(() => {
+    let isActive = true;
+
+    async function loadChatHistory() {
+      try {
+        const response = await getChats();
+        const chats = Array.isArray(response?.data) ? response.data : [];
+
+        if (!isActive) {
+          return;
+        }
+
+        setHistoryItems(
+          chats
+            .map((chat) => {
+              const prompt = typeof chat.title === "string" ? chat.title.trim() : "";
+
+              if (!prompt) {
+                return null;
+              }
+
+              return {
+                id: chat.chatId,
+                title: `Problem: ${truncateText(prompt, 34)}`,
+                timestamp: formatHistoryTimestamp(chat.updatedAt ?? chat.createdAt),
+              };
+            })
+            .filter(Boolean)
+        );
+      } catch (historyError) {
+        if (!isActive) {
+          return;
+        }
+
+        const message = historyError instanceof Error ? historyError.message : "Unable to load chat history";
+        setChatError(message);
+      }
+    }
+
+    loadChatHistory();
+
+    return () => {
+      isActive = false;
+    };
+  }, [setChatError]);
 
   const submitProblem = useCallback(
     async (problem) => {
@@ -87,19 +137,23 @@ export function ArenaProvider({ children }) {
       setMessages((prev) => [...prev, userMessage]);
       setDraft("");
 
-      const sendMessagePromise = sendMessage(prompt).catch((sendError) => {
-        const message = sendError instanceof Error ? sendError.message : "Chat sync failed";
-        setChatError(message);
-      });
+      const sendMessagePromise = sendMessage(prompt)
+        .then((response) => response?.data?.chatId ?? null)
+        .catch((sendError) => {
+          const message = sendError instanceof Error ? sendError.message : "Chat sync failed";
+          setChatError(message);
+          return null;
+        });
 
       try {
         const evaluation = await evaluateProblem(prompt);
         const assistantMessage = buildAssistantMessage(prompt, evaluation);
+        const savedChatId = await sendMessagePromise;
 
         setMessages((prev) => [...prev, assistantMessage]);
         setHistoryItems((prev) => [
           {
-            id: `history-${Date.now()}`,
+            id: savedChatId ?? `history-${Date.now()}`,
             title: `Problem: ${truncateText(prompt, 34)}`,
             timestamp: formatHistoryTimestamp(new Date().toISOString()),
           },
@@ -124,11 +178,26 @@ export function ArenaProvider({ children }) {
     setIsSidebarOpen(false);
   }, [resetChat]);
 
-  const selectHistoryItem = useCallback((title) => {
-    const prompt = title.replace(/^Problem:\s*/i, "");
-    setDraft(prompt);
-    setIsSidebarOpen(false);
-  }, []);
+  const selectHistoryItem = useCallback(
+    async (item) => {
+      if (!item?.id) {
+        return;
+      }
+
+      setError("");
+      setDraft("");
+      setIsSidebarOpen(false);
+
+      try {
+        const storedMessages = await openChat(item.id);
+        setMessages(storedMessages.map(mapStoredMessage));
+      } catch (historyError) {
+        const message = historyError instanceof Error ? historyError.message : "Unable to load chat messages";
+        setError(message);
+      }
+    },
+    [openChat]
+  );
 
   const value = useMemo(
     () => ({

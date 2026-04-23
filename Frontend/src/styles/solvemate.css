@@ -339,6 +339,18 @@
   box-shadow: 0 10px 26px rgba(37, 99, 235, 0.32);
 }
 
+.message-bubble.assistant {
+  max-width: min(760px, 100%);
+  background: rgba(15, 23, 42, 0.78);
+  border: 1px solid #273040;
+  color: #d7deea;
+  padding: 16px 18px;
+  border-radius: 16px;
+  font-size: 1.02rem;
+  line-height: 1.65;
+  white-space: pre-wrap;
+}
+
 .message-row.assistant {
   align-items: flex-start;
   gap: 14px;

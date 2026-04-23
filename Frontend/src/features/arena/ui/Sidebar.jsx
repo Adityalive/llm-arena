@@ -8,7 +8,7 @@ import {
 
 function HistoryItem({ item, onSelect }) {
   return (
-    <button className="history-item" type="button" onClick={() => onSelect(item.title)}>
+    <button className="history-item" type="button" onClick={() => onSelect(item)}>
       <div className="history-text">{item.title}</div>
       <div className="history-time">{item.timestamp}</div>
     </button>
