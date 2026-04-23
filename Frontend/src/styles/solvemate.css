@@ -298,10 +298,16 @@
 }
 
 .messages-list,
-.empty-state {
+.empty-state,
+.history-loader {
   max-width: 930px;
   margin: 0 auto;
   width: calc(100% - 48px);
+}
+
+.history-loader {
+  margin-top: 22px;
+  color: var(--text-muted);
 }
 
 .empty-state {

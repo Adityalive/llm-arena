@@ -36,6 +36,7 @@ export async function get(path) {
   const response = await fetch(toAbsolute(path), {
     method: "GET",
     headers: DEFAULT_HEADERS,
+    cache: "no-store",
   });
 
   return parseResponse(response);

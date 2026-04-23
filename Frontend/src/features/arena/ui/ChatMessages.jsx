@@ -20,6 +20,7 @@ function UserMessage({ message }) {
 
 function AssistantMessage({ message, onGuide }) {
   const hasSolutions = Array.isArray(message.solutions) && message.solutions.length > 0;
+  const content = message.content || (message.status === "streaming" ? "Response is still being generated..." : "");
 
   return (
     <div className="message-row assistant fade-in">
@@ -41,21 +42,20 @@ function AssistantMessage({ message, onGuide }) {
             </div>
           </>
         ) : (
-          <div className="message-bubble assistant">{message.content}</div>
+          <div className="message-bubble assistant">{content}</div>
         )}
       </div>
     </div>
   );
 }
 
-export function ChatMessages({ messages, onGuide }) {
+export function ChatMessages({ messages, isLoading = false, onGuide }) {
+  if (isLoading) {
+    return <div className="history-loader">Loading chat messages...</div>;
+  }
+
   if (!messages.length) {
-    return (
-      <div className="empty-state">
-        <h2>Ask a problem and compare two model solutions instantly.</h2>
-        <p>SolveMate evaluates both responses and highlights the winner with reasoning.</p>
-      </div>
-    );
+    return null;
   }
 
   return (

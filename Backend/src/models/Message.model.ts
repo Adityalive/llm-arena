@@ -3,7 +3,17 @@ import mongoose from "mongoose";
 const messageSchema = new mongoose.Schema({
     content: {
         type: String,
-        required: true,
+        default: '',
+        validate: {
+            validator(value: string) {
+                if (this.role === 'assistant') {
+                    return typeof value === 'string';
+                }
+
+                return typeof value === 'string' && value.trim().length > 0;
+            },
+            message: 'content is required',
+        },
     },
     role: {
         type: String,

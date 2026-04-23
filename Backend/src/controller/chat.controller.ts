@@ -92,7 +92,13 @@ function emitToChat(io: AppIo | undefined, chatId: string, event: string, payloa
   io.to(`chat:${chatId}`).emit(event, payload);
 }
 
+function disableCache(res: Response) {
+  res.set("Cache-Control", "no-store");
+}
+
 export async function getChats(_req: Request, res: Response) {
+  disableCache(res);
+
   try {
     const chats = await Message.aggregate([
       {
@@ -117,7 +123,7 @@ export async function getChats(_req: Request, res: Response) {
     res.status(200).json({
       message: "Chats fetched successfully",
       data: chats.map((chat) => ({
-        chatId: chat._id,
+        chatId: String(chat._id),
         title: chat.title,
         createdAt: chat.createdAt,
         updatedAt: chat.updatedAt,
@@ -159,6 +165,8 @@ export async function createChat(req: Request, res: Response) {
 }
 
 export async function getChatHistory(req: Request, res: Response) {
+  disableCache(res);
+
   const chatId = getStringParam(req.params.chatId);
 
   if (!chatId || !isObjectId(chatId)) {
@@ -167,21 +175,20 @@ export async function getChatHistory(req: Request, res: Response) {
   }
 
   try {
-    const chat = await Chat.findById(chatId).populate({
-      path: "messages",
-      options: { sort: { createdAt: 1 } },
-    });
+    const chat = await Chat.findById(chatId);
 
     if (!chat) {
       res.status(404).json({ message: "Chat not found" });
       return;
     }
 
+    const messages = await Message.find({ chatId }).sort({ createdAt: 1 }).lean();
+
     res.status(200).json({
       message: "Chat history fetched successfully",
       data: {
         chatId: chat._id,
-        messages: chat.messages,
+        messages,
       },
     });
   } catch (error) {

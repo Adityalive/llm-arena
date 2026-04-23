@@ -1,16 +1,23 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { evaluateProblem } from "../api/arenaApi";
 import { formatHistoryTimestamp, toBulletPoints, truncateText } from "../../../shared/utils/formatters";
-import { getChats } from "../../chat/api/chatApi";
+import { getChatHistory, getChats } from "../../chat/api/chatApi";
 import { useChat } from "../../chat/hooks/useChat";
 
 import { ArenaContext } from "./ArenaContextValue";
 
-function mapStoredMessage(message) {
+function mapStoredMessage(message, index) {
+  if (!["user", "assistant"].includes(message.role)) {
+    return null;
+  }
+
+  const content = typeof message.content === "string" ? message.content.trim() : "";
+
   return {
-    id: message._id ?? `${message.role}-${message.createdAt ?? Date.now()}`,
+    id: message._id ?? `${message.role}-${message.createdAt ?? index}`,
     role: message.role,
-    content: message.content ?? "",
+    content,
+    status: message.status,
     createdAt: message.createdAt,
   };
 }
@@ -62,12 +69,13 @@ function buildAssistantMessage(problem, response) {
 }
 
 export function ArenaProvider({ children }) {
-  const { sendMessage, openChat, resetChat, setChatError } = useChat();
+  const { sendMessage, resetChat, setChatError } = useChat();
 
   const [messages, setMessages] = useState([]);
   const [historyItems, setHistoryItems] = useState([]);
   const [draft, setDraft] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isLoadingHistory, setIsLoadingHistory] = useState(false);
   const [error, setError] = useState("");
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
@@ -186,17 +194,27 @@ export function ArenaProvider({ children }) {
 
       setError("");
       setDraft("");
+      setMessages([]);
       setIsSidebarOpen(false);
+      setIsLoadingHistory(true);
 
       try {
-        const storedMessages = await openChat(item.id);
-        setMessages(storedMessages.map(mapStoredMessage));
+        const response = await getChatHistory(item.id);
+        const storedMessages = Array.isArray(response?.data?.messages) ? response.data.messages : [];
+        const nextMessages = storedMessages
+          .map(mapStoredMessage)
+          .filter(Boolean)
+          .filter((message) => message.content || message.status === "streaming");
+
+        setMessages(nextMessages);
       } catch (historyError) {
         const message = historyError instanceof Error ? historyError.message : "Unable to load chat messages";
         setError(message);
+      } finally {
+        setIsLoadingHistory(false);
       }
     },
-    [openChat]
+    []
   );
 
   const value = useMemo(
@@ -205,6 +223,7 @@ export function ArenaProvider({ children }) {
       historyItems,
       draft,
       isSubmitting,
+      isLoadingHistory,
       error,
       isSidebarOpen,
       setDraft,
@@ -219,6 +238,7 @@ export function ArenaProvider({ children }) {
       historyItems,
       draft,
       isSubmitting,
+      isLoadingHistory,
       error,
       isSidebarOpen,
       submitProblem,
