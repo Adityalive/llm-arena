@@ -103,7 +103,7 @@ const solutionNode = async (state: GraphState): Promise<Partial<GraphState>> => 
   };
 };
 
-const judgeNode = async (state: GraphState): Promise<Partial<GraphState>> => {
+const evaluateNode = async (state: GraphState): Promise<Partial<GraphState>> => {
   const prompt = [
     "You are evaluating two AI solutions.",
     "Return strict JSON only with this exact schema:",
@@ -141,10 +141,10 @@ const workflow = new StateGraph<GraphState>({
 });
 
 workflow.addNode("solution", solutionNode);
-workflow.addNode("judge", judgeNode);
+workflow.addNode("evaluate", evaluateNode);
 workflow.setEntryPoint("solution");
-workflow.addEdge("solution", "judge");
-workflow.addEdge("judge", END);
+workflow.addEdge("solution", "evaluate");
+workflow.addEdge("evaluate", END);
 
 const graph = workflow.compile();
 
@@ -162,3 +162,4 @@ export default async function graphAi(problem: string) {
 
   return result as GraphState;
 }
+
