@@ -5,7 +5,7 @@
     "types": ["node"],
     "module": "Node16",
     "moduleResolution": "Node16",
-    "outDir": "./dist",
+    "outDir": "Backend/dist",
     "rootDir": "./src",
     "strict": true,
     "esModuleInterop": true,
@@ -15,5 +15,5 @@
     "declaration": true
   },
   "include": ["src/**/*"],
-  "exclude": ["node_modules", "dist"]
+  "exclude": ["Backend/node_modules", "Backend/dist"]
 }

@@ -5,6 +5,10 @@ import { ChatMistralAI } from "@langchain/mistralai";
 import config from "../config/config";
 
 export type ModelProvider = "google" | "mistral" | "cohere";
+export type AppModel = {
+  invoke: (input: unknown) => Promise<unknown>;
+  stream?: (input: unknown) => AsyncIterable<unknown> | Promise<AsyncIterable<unknown>>;
+};
 
 const googleModel = config.GOOGLE_API_KEY
   ? new ChatGoogle({
@@ -27,30 +31,34 @@ const cohereModel = config.COHERE_API_KEY
     })
   : null;
 
-export const models = {
+const modelRegistry = {
   google: googleModel,
   mistral: mistralModel,
   cohere: cohereModel,
 } as const;
 
-export function getModel(provider: ModelProvider = "google") {
-  const model = models[provider];
+export function getConfiguredModel(provider: ModelProvider): AppModel | null {
+  return modelRegistry[provider] as AppModel | null;
+}
+
+export function getModel(provider: ModelProvider = "google"): AppModel {
+  const model = getConfiguredModel(provider);
 
   if (model) {
     return model;
   }
 
-  const fallback = googleModel ?? mistralModel ?? cohereModel;
+  const fallback = (googleModel ?? mistralModel ?? cohereModel) as AppModel | null;
 
   if (fallback) {
     return fallback;
   }
 
   throw new Error(
-    "No model API key configured. Add GOOGLE_API_KEY, MISTRAL_API_KEY, or COHERE_API_KEY to your environment."
+    "No model API key configured. Add GOOGLE_API_KEY, MISTRALAI_API_KEY, or COHERE_API_KEY to your environment."
   );
 }
 
-const taskModel = getModel();
+const defaultModel = getModel();
 
-export default taskModel;
+export default defaultModel;
