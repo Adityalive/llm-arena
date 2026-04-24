@@ -12,62 +12,69 @@ function FeatureIcon({ children }) {
 export function LandingPage() {
   return (
     <div className="landing-shell">
-      <header className="landing-header">
-        <div className="landing-brand">LLM Arena</div>
+      <div className="landing-hero">
+        <video autoPlay loop muted playsInline className="landing-bg-video">
+          <source src="https://www.pexels.com/download/video/34877826/" type="video/mp4" />
+        </video>
+        <div className="landing-overlay" />
+        
+        <header className="landing-header">
+          <div className="landing-brand">LLM Arena</div>
 
-        <SignedOut>
-          <div className="landing-auth-actions">
-            <SignInButton mode="modal">
-              <button className="landing-btn landing-btn-ghost" type="button">
-                Sign In
-              </button>
-            </SignInButton>
-            <SignUpButton mode="modal">
-              <button className="landing-btn landing-btn-primary" type="button">
-                Get Started
-              </button>
-            </SignUpButton>
-          </div>
-        </SignedOut>
-
-        <SignedIn>
-          <div className="landing-user-block">
-            <UserButton afterSignOutUrl="/" />
-          </div>
-        </SignedIn>
-      </header>
-
-      <main className="landing-main">
-        <span className="landing-kicker">Battle-test your AI models</span>
-
-        <h1 className="landing-title">
-          The arena where AI models compete.
-        </h1>
-
-        <p className="landing-subtitle">
-          Submit a problem, compare responses from multiple models side by side,
-          and decide which answer wins. Track your history and refine your prompts.
-        </p>
-
-        <div className="landing-cta-row">
           <SignedOut>
-            <SignInButton mode="modal">
-              <button className="landing-btn landing-btn-primary landing-btn-large" type="button">
-                Start comparing →
-              </button>
-            </SignInButton>
-            <Link to="/sign-up" className="landing-btn landing-btn-ghost landing-btn-large">
-              Create account
-            </Link>
+            <div className="landing-auth-actions">
+              <SignInButton mode="modal">
+                <button className="landing-btn landing-btn-ghost" type="button">
+                  Sign In
+                </button>
+              </SignInButton>
+              <SignUpButton mode="modal">
+                <button className="landing-btn landing-btn-primary" type="button">
+                  Get Started
+                </button>
+              </SignUpButton>
+            </div>
           </SignedOut>
 
           <SignedIn>
-            <Link to="/arena" className="landing-btn landing-btn-primary landing-btn-large">
-              Enter Arena →
-            </Link>
+            <div className="landing-user-block">
+              <UserButton afterSignOutUrl="/" />
+            </div>
           </SignedIn>
-        </div>
-      </main>
+        </header>
+
+        <main className="landing-main">
+          <span className="landing-kicker">Battle-test your AI models</span>
+
+          <h1 className="landing-title">
+            The arena where AI models compete.
+          </h1>
+
+          <p className="landing-subtitle">
+            Submit a problem, compare responses from multiple models side by side,
+            and decide which answer wins. Track your history and refine your prompts.
+          </p>
+
+          <div className="landing-cta-row">
+            <SignedOut>
+              <SignInButton mode="modal">
+                <button className="landing-btn landing-btn-primary landing-btn-large" type="button">
+                  Start comparing →
+                </button>
+              </SignInButton>
+              <Link to="/sign-up" className="landing-btn landing-btn-ghost landing-btn-large">
+                Create account
+              </Link>
+            </SignedOut>
+
+            <SignedIn>
+              <Link to="/arena" className="landing-btn landing-btn-primary landing-btn-large">
+                Enter Arena →
+              </Link>
+            </SignedIn>
+          </div>
+        </main>
+      </div>
 
       <section className="landing-features" aria-label="Features">
         <div className="feature-card">
