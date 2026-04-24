@@ -49,12 +49,29 @@ function AssistantMessage({ message, onGuide }) {
   );
 }
 
-export function ChatMessages({ messages, isLoading = false, onGuide }) {
+function ThinkingMessage() {
+  return (
+    <div className="message-row assistant fade-in">
+      <div className="assistant-avatar">
+        <IconSparkleLogo />
+      </div>
+      <div className="assistant-content">
+        <div className="thinking-bubble">
+          <span></span>
+          <span></span>
+          <span></span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export function ChatMessages({ messages, isLoading = false, isSubmitting = false, onGuide }) {
   if (isLoading) {
     return <div className="history-loader">Loading chat messages...</div>;
   }
 
-  if (!messages.length) {
+  if (!messages.length && !isSubmitting) {
     return null;
   }
 
@@ -67,6 +84,8 @@ export function ChatMessages({ messages, isLoading = false, onGuide }) {
           <AssistantMessage key={message.id} message={message} onGuide={onGuide} />
         )
       )}
+      {isSubmitting && <ThinkingMessage />}
     </div>
   );
 }
+

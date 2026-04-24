@@ -7,18 +7,34 @@ import { useChat } from "../../chat/hooks/useChat";
 import { ArenaContext } from "./ArenaContextValue";
 
 function mapStoredMessage(message, index) {
-  if (!["user", "assistant"].includes(message.role)) {
+  if (!["user", "assistant", "model", "bot"].includes(message.role)) {
     return null;
   }
 
-  const content = typeof message.content === "string" ? message.content.trim() : "";
+  const isAssistant = ["assistant", "model", "bot"].includes(message.role);
 
-  return {
+  const base = {
     id: message._id ?? `${message.role}-${message.createdAt ?? index}`,
-    role: message.role,
-    content,
+    role: isAssistant ? "assistant" : message.role,
     status: message.status,
     createdAt: message.createdAt,
+  };
+
+  if (isAssistant) {
+    // If the message has structured arena data, preserve it
+    return {
+      ...base,
+      content: typeof message.content === "string" ? message.content.trim() : "",
+      intro: message.intro,
+      winner: message.winner,
+      solutions: message.solutions,
+      reasoning: message.reasoning,
+    };
+  }
+
+  return {
+    ...base,
+    content: typeof message.content === "string" ? message.content.trim() : "",
   };
 }
 
@@ -203,8 +219,7 @@ export function ArenaProvider({ children }) {
         const storedMessages = Array.isArray(response?.data?.messages) ? response.data.messages : [];
         const nextMessages = storedMessages
           .map(mapStoredMessage)
-          .filter(Boolean)
-          .filter((message) => message.content || message.status === "streaming");
+          .filter(Boolean);
 
         setMessages(nextMessages);
       } catch (historyError) {

@@ -6,20 +6,40 @@ export function TopBar() {
 
   return (
     <header className="topbar">
-      <button className="icon-btn mobile-only" type="button" aria-label="Open sidebar" onClick={() => setIsSidebarOpen(true)}>
-        <IconMenu />
-      </button>
+      <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+        <button
+          className="icon-btn mobile-only"
+          type="button"
+          aria-label="Open sidebar"
+          onClick={() => setIsSidebarOpen(true)}
+        >
+          <IconMenu />
+        </button>
 
-      <button className="title-dropdown" type="button">
-        Problem
-        <span className="dropdown-icon">
-          <IconChevron />
+        <button className="title-dropdown" type="button">
+          New conversation
+          <span className="dropdown-icon">
+            <IconChevron />
+          </span>
+        </button>
+      </div>
+
+      <div className="model-tags">
+        <span className="model-tag">
+          <span className="model-dot" />
+          claude-sonnet-4
         </span>
-      </button>
+        <span className="model-tag">
+          <span className="model-dot purple" />
+          gpt-5.4-mini
+        </span>
+      </div>
 
-      <button className="icon-btn" type="button" aria-label="Share and export">
-        <IconShare />
-      </button>
+      <div className="topbar-right">
+        <button className="icon-btn" type="button" aria-label="Share">
+          <IconShare />
+        </button>
+      </div>
     </header>
   );
 }
