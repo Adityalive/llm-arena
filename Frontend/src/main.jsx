@@ -1,11 +1,21 @@
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
+import { ClerkProvider } from "@clerk/clerk-react";
 import App from "./app/App";
 import "./styles/global.css";
 import "./styles/solvemate.css";
+import "./styles/auth.css";
+
+const publishableKey = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
+
+if (!publishableKey) {
+  throw new Error("Missing VITE_CLERK_PUBLISHABLE_KEY in Frontend/.env");
+}
 
 createRoot(document.getElementById("root")).render(
   <StrictMode>
-    <App />
+    <ClerkProvider publishableKey={publishableKey}>
+      <App />
+    </ClerkProvider>
   </StrictMode>
 );
