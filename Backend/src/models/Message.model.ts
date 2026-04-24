@@ -38,7 +38,17 @@ const messageSchema = new mongoose.Schema({
         ref: 'Chat',
         required: true,
     },
-}, { timestamps: true });
+    intro: {
+        type: String,
+        default: null,
+    },
+    winner: {
+        type: String,
+        default: null,
+    },
+    reasoning: mongoose.Schema.Types.Mixed,
+    solutions: [mongoose.Schema.Types.Mixed],
+}, { timestamps: true, strict: false });
     
 const Message = mongoose.model("Message", messageSchema);
 

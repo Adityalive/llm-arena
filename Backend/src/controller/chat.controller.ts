@@ -199,7 +199,7 @@ export async function getChatHistory(req: Request, res: Response) {
 
 export async function sendMessage(req: Request, res: Response) {
   const chatId = getStringParam(req.params.chatId);
-  const { content, problem, provider } = req.body ?? {};
+  const { content, problem, provider, isArena, intro, winner, reasoning, solutions } = req.body ?? {};
 
   if (!chatId || !isObjectId(chatId)) {
     res.status(400).json({ message: "Invalid chatId" });
@@ -237,9 +237,15 @@ export async function sendMessage(req: Request, res: Response) {
       content: "",
       role: "assistant",
       chatId,
-      status: "streaming",
+      status: isArena ? "complete" : "streaming",
       runId,
-      model: modelLabel,
+      model: isArena ? "arena" : modelLabel,
+      ...(isArena && {
+        intro,
+        winner,
+        reasoning,
+        solutions,
+      }),
     })) as any;
 
     await Chat.findByIdAndUpdate(chatId, {
@@ -249,6 +255,19 @@ export async function sendMessage(req: Request, res: Response) {
         },
       },
     });
+
+    if (isArena) {
+      res.status(201).json({
+        message: "Arena message saved successfully",
+        data: {
+          chatId,
+          userMessageId: userMessage._id,
+          assistantMessageId: assistantMessage._id,
+          status: "complete",
+        },
+      });
+      return;
+    }
 
     res.status(202).json({
       message: "Message accepted",

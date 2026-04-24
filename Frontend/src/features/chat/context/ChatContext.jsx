@@ -24,10 +24,12 @@ export function ChatProvider({ children }) {
   }, [chatId]);
 
   const sendMessage = useCallback(
-    async (content) => {
+    async (payload) => {
       const resolvedChatId = await ensureChat();
-      return sendChatMessage(resolvedChatId, { content });
+      const messageData = typeof payload === "string" ? { content: payload } : payload;
+      return sendChatMessage(resolvedChatId, messageData);
     },
+
     [ensureChat]
   );
 

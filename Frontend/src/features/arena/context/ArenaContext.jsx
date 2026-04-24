@@ -161,18 +161,25 @@ export function ArenaProvider({ children }) {
       setMessages((prev) => [...prev, userMessage]);
       setDraft("");
 
-      const sendMessagePromise = sendMessage(prompt)
-        .then((response) => response?.data?.chatId ?? null)
-        .catch((sendError) => {
-          const message = sendError instanceof Error ? sendError.message : "Chat sync failed";
-          setChatError(message);
-          return null;
-        });
-
       try {
         const evaluation = await evaluateProblem(prompt);
         const assistantMessage = buildAssistantMessage(prompt, evaluation);
-        const savedChatId = await sendMessagePromise;
+        
+        let savedChatId = null;
+        try {
+          const response = await sendMessage({
+             content: prompt,
+             isArena: true,
+             intro: assistantMessage.intro,
+             winner: assistantMessage.winner,
+             reasoning: assistantMessage.reasoning,
+             solutions: assistantMessage.solutions
+          });
+          savedChatId = response?.data?.chatId ?? null;
+        } catch (sendError) {
+          const message = sendError instanceof Error ? sendError.message : "Chat sync failed";
+          setChatError(message);
+        }
 
         setMessages((prev) => [...prev, assistantMessage]);
         setHistoryItems((prev) => [
@@ -187,7 +194,6 @@ export function ArenaProvider({ children }) {
         const message = submitError instanceof Error ? submitError.message : "Evaluation failed";
         setError(message);
       } finally {
-        await sendMessagePromise;
         setIsSubmitting(false);
       }
     },
