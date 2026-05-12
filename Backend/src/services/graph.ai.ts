@@ -141,11 +141,11 @@ const workflow = new StateGraph<GraphState>({
   },
 });
 
-workflow.addNode("solution", solutionNode);
-workflow.addNode("evaluate", evaluateNode);
-workflow.setEntryPoint("solution");
-workflow.addEdge("solution", "evaluate");
-workflow.addEdge("evaluate", END);
+workflow.addNode("generate_solutions", solutionNode);
+workflow.addNode("evaluate_solutions", evaluateNode);
+workflow.setEntryPoint("generate_solutions");
+workflow.addEdge("generate_solutions", "evaluate_solutions");
+workflow.addEdge("evaluate_solutions", END);
 
 const graph = workflow.compile();
 

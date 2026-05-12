@@ -1,0 +1,52 @@
+# Stage 1: Build the React application
+FROM node:20-alpine AS build
+
+WORKDIR /app
+
+# Copy package files and install dependencies
+COPY package*.json ./
+RUN npm install
+
+# Copy the rest of the application code and build
+COPY . .
+RUN npm run build
+
+# Stage 2: Serve the application using Nginx
+FROM nginx:stable-alpine
+
+# Copy the built assets from the build stage to Nginx's default html directory
+COPY --from=build /app/dist /usr/share/nginx/html
+
+# Custom Nginx configuration to support client-side routing and proxying to Backend
+RUN echo 'server { \
+    listen 80; \
+    location / { \
+        root /usr/share/nginx/html; \
+        index index.html; \
+        try_files $uri $uri/ /index.html; \
+    } \
+    # Proxy API requests to the backend container \
+    location /api/ { \
+        proxy_pass http://backend:5001/api/; \
+        proxy_http_version 1.1; \
+        proxy_set_header Upgrade $http_upgrade; \
+        proxy_set_header Connection "upgrade"; \
+        proxy_set_header Host $host; \
+        proxy_cache_bypass $http_upgrade; \
+    } \
+    location /evaluate/ { \
+        proxy_pass http://backend:5001/evaluate/; \
+    } \
+    # Proxy Socket.io requests \
+    location /socket.io/ { \
+        proxy_pass http://backend:5001/socket.io/; \
+        proxy_http_version 1.1; \
+        proxy_set_header Upgrade $http_upgrade; \
+        proxy_set_header Connection "upgrade"; \
+        proxy_set_header Host $host; \
+    } \
+}' > /etc/nginx/conf.d/default.conf
+
+EXPOSE 80
+
+CMD ["nginx", "-g", "daemon off;"]
