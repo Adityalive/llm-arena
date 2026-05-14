@@ -26,20 +26,20 @@ RUN echo 'server { \
         try_files $uri $uri/ /index.html; \
     } \
     # Proxy API requests to the backend container \
-    location /api/ { \
-        proxy_pass http://backend:5001/api/; \
+    location /api { \
+        proxy_pass http://backend:5001/api; \
         proxy_http_version 1.1; \
         proxy_set_header Upgrade $http_upgrade; \
         proxy_set_header Connection "upgrade"; \
         proxy_set_header Host $host; \
         proxy_cache_bypass $http_upgrade; \
     } \
-    location /evaluate/ { \
-        proxy_pass http://backend:5001/evaluate/; \
+    location /evaluate { \
+        proxy_pass http://backend:5001/evaluate; \
     } \
     # Proxy Socket.io requests \
-    location /socket.io/ { \
-        proxy_pass http://backend:5001/socket.io/; \
+    location /socket.io { \
+        proxy_pass http://backend:5001/socket.io; \
         proxy_http_version 1.1; \
         proxy_set_header Upgrade $http_upgrade; \
         proxy_set_header Connection "upgrade"; \
